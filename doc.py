@@ -4,6 +4,9 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 import base64
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 load_dotenv()
 
@@ -11,6 +14,9 @@ DB_HOST=base64.b64decode(os.environ.get("DB_HOST")).decode()
 DB_USER=base64.b64decode(os.environ.get("DB_USER")).decode()
 DB_PASSWORD=base64.b64decode(os.environ.get("DB_PASSWORD")).decode()
 DB_NAME=base64.b64decode(os.environ.get("DB_NAME")).decode()
+SMTP_HOST=base64.b64decode(os.environ.get("SMTP_HOST")).decode()
+SMTP_USER=base64.b64decode(os.environ.get("SMTP_USER")).decode()
+SMTP_PASSWORD=base64.b64decode(os.environ.get("SMTP_PASSWORD")).decode()
 
 mydb = mysql.connector.connect(
           host=DB_HOST,
@@ -188,6 +194,46 @@ class LibraryManagement:
 
     def get_reservation_history(self, member):
         return [reservation for reservation in self.reservations if reservation.member_id == member.member_id]
+
+    def send_reminder_emails(self):
+        reservations_to_remind = [reservation for reservation in self.reservations if reservation.date_limit < datetime.date.today()]
+        members_to_remind = list(set(reservation.member_id for reservation in reservations_to_remind))
+
+        for member_id in members_to_remind:
+            member_reservations = [reservation for reservation in reservations_to_remind if reservation.member_id == member_id]
+            member_email = LibraryManagement.get_member_email(self, member_id)
+            subject = "Rappel : Réservations en retard"
+            message = f"Cher membre,\n\nVous avez actuellement les réservations en retard suivantes :\n\n"
+
+            for reservation in member_reservations:
+                book_title = LibraryManagement.get_book_title(self, reservation.book_isbn)
+                message += f"- Livre : {book_title}, ID de réservation: {reservation.reservation_id}\n"
+            try:
+                send_mail(member_email, subject, message)
+                return True
+            except:
+                return False
+
+def send_mail(recipient, subject, message):
+    smtp_host = SMTP_HOST
+    smtp_port = 587 
+    smtp_username = SMTP_USER
+    smtp_password = SMTP_PASSWORD
+    msg = MIMEMultipart()
+    msg['From'] = smtp_username
+    msg['To'] = recipient
+    msg['Subject'] = subject
+    body = MIMEText(message)
+    msg.attach(body)
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.timeout = 2
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+        return True
+    except smtplib.SMTPException as e:
+        raise Exception
 
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
