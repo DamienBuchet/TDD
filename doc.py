@@ -285,5 +285,16 @@ class LibraryManagementTests(unittest.TestCase):
         self.assertIn(reservation1, reservations)
         self.assertIn(reservation2, reservations)
 
+    def test_get_reservation_history(self):
+        reservation1 = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book1.isbn)
+        reservation2 = Reservation(reservation_id=2, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book2.isbn)
+        self.library.add_reservation(reservation1)
+        self.library.add_reservation(reservation2)
+        reservation2.return_book(datetime.date.today())
+        history = self.library.get_reservation_history(self.member)
+        self.assertEqual(len(history), 2)
+        self.assertIn(reservation1, history)
+        self.assertIn(reservation2, history)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
