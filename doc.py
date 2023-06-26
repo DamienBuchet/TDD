@@ -176,5 +176,15 @@ class LibraryManagementTests(unittest.TestCase):
         self.library.remove_member(self.member)
         self.assertNotIn(self.member, self.library.members)
 
+    def test_search_members_by_name(self):
+        self.library.add_member(self.member)
+        result = self.library.search_members_by_name("John Doe")
+        self.assertEqual(result, [self.member])
+
+    def test_search_member_by_code(self):
+        self.library.add_member(self.member)
+        result = self.library.search_member_by_code("M001")
+        self.assertEqual(result, self.member)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
