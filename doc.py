@@ -1,12 +1,16 @@
-import datetime
-import unittest
-import mysql.connector
-from dotenv import load_dotenv
-import os
+# Modules compris dans l'installation de base de Python
 import base64
+import datetime
+import os
 import smtplib
+import unittest
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+# Modules complémentaires
+# pip install mysql-connector
+import mysql.connector
+# pip install python-dotenv
+from dotenv import load_dotenv
 
 load_dotenv()
 
