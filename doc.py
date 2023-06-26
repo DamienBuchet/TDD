@@ -253,6 +253,18 @@ class ISBNValidator:
     
     _is_valid_13_digit_isbn = lambda isbn: sum(int(isbn[i]) if i % 2 == 0 else int(isbn[i]) * 3 for i in range(len(isbn))) % 10 == 0
 
+class ISBNValidatorTest(unittest.TestCase):
+
+    test_valid_isbn_10 = lambda self: self.assertTrue(ISBNValidator.is_valid_isbn('2749909392'))
+
+    test_invalid_isbn_10 = lambda self: self.assertFalse(ISBNValidator.is_valid_isbn('2749909393'))
+
+    test_letters_isbn_10 = lambda self: self.assertRaises(Exception, ISBNValidator.is_valid_isbn, '27499O9392')
+
+    test_valid_isbn_13 = lambda self: self.assertTrue(ISBNValidator.is_valid_isbn('9782749909394'))
+
+    test_invalid_isbn_13 = lambda self: self.assertFalse(ISBNValidator.is_valid_isbn('9782749909393'))
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
