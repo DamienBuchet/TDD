@@ -80,5 +80,27 @@ class LibraryManagementTests(unittest.TestCase):
         self.library.remove_book(self.book1)
         self.assertNotIn(self.book1, self.library.books)
 
+    def test_search_books_by_title(self):
+        self.library.add_book(self.book1)
+        self.library.add_book(self.book2)
+        result = self.library.search_books_by_title("Livre 1")
+        self.assertIn(self.book1, result)
+        self.assertNotIn(self.book2, result)
+
+    def test_search_books_by_author(self):
+        self.library.add_book(self.book1)
+        self.library.add_book(self.book2)
+        result = self.library.search_books_by_author("Auteur 1")
+        self.assertIn(self.book1, result)
+        self.assertNotIn(self.book2, result)
+
+    def test_search_books_by_isbn(self):
+        self.library.add_book(self.book1)
+        self.library.add_book(self.book2)
+        result = self.library.search_books_by_isbn("1234567890")
+        self.assertEqual(result, self.book1)
+        result = self.library.search_books_by_isbn("0987654321")
+        self.assertEqual(result, self.book2)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
