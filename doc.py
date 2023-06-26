@@ -136,6 +136,18 @@ class LibraryManagement:
             return member.email
         return None
 
+    def add_reservation(self, reservation):
+        self.reservations.append(reservation)
+
+    def update_reservation(self, reservation):
+        for i in range(len(self.reservations)):
+            if self.reservations[i].reservation_id == reservation.reservation_id:
+                self.reservations[i] = reservation
+                break
+
+    def remove_reservation(self, reservation):
+        self.reservations.remove(reservation)
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
