@@ -245,5 +245,17 @@ class LibraryManagementTests(unittest.TestCase):
         self.library.remove_reservation(reservation)
         self.assertNotIn(reservation, self.library.reservations)
 
+    def test_make_reservation(self):
+        self.library.add_member(self.member)
+        self.library.add_book(self.book1)
+        reservation = self.library.make_reservation(self.member, self.book1)
+        self.assertIn(reservation, self.library.reservations)
+
+    def test_cancel_reservation(self):
+        reservation = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book1.isbn)
+        self.library.add_reservation(reservation)
+        self.library.cancel_reservation(reservation)
+        self.assertNotIn(reservation, self.library.reservations)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
