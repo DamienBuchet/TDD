@@ -338,5 +338,23 @@ class LibraryManagementTests(unittest.TestCase):
         ins_livres = res
         self.assertEqual(nb_livres_bdd + nb_livres, ins_livres)
 
+    def test_add_member_in_bdd(self):
+        self.library.add_member(self.member)
+        sql = f"SELECT COUNT(*) as res FROM members"
+        mycursor.execute(sql)
+        res = mycursor.fetchall()[0][0]
+        nb_membres_bdd = int(res)
+        nb_membres = 0
+        for member in self.library.members:
+            nb_membres += 1
+            sql = f"INSERT INTO `members`(`member_id`, `code`, `firstname`, `lastname`, `birthdate`, `gender`, `email`) VALUES ('{member.member_id}','{member.code}','{member.first_name}','{member.last_name}','{member.date_of_birth}','{member.gender}','{member.email}')"
+            mycursor.execute(sql)
+            mydb.commit()
+        sql = f"SELECT COUNT(*) as res FROM members"
+        mycursor.execute(sql)
+        res = mycursor.fetchall()[0][0]
+        ins_membres = res
+        self.assertEqual(nb_membres_bdd + nb_membres, ins_membres)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
