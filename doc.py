@@ -198,5 +198,10 @@ class LibraryManagementTests(unittest.TestCase):
         result = self.library.search_member_by_code("M001")
         self.assertEqual(result, self.member)
 
+    def test_get_member_email(self):
+        self.library.add_member(self.member)
+        email = self.library.get_member_email(self.member.member_id)
+        self.assertEqual(email, "damienbuchet@damienbuchet.fr")
+
 if __name__ == '__main__':
     unittest.main(exit=False)
