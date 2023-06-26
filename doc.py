@@ -61,5 +61,24 @@ class LibraryManagementTests(unittest.TestCase):
         self.book2 = Book("0987654321", "Livre 2", "Auteur 2", "Éditeur 2", "BD", True)
         self.member = Member(1, "M001", "John", "Doe", datetime.date(1990, 1, 1), "Homme", "damienbuchet@damienbuchet.fr")
 
+    def test_add_book(self):
+        self.library.add_book(self.book1)
+        self.assertIn(self.book1, self.library.books)
+
+    def test_update_book(self):
+        self.library.add_book(self.book1)
+        updated_book = Book("1234567890", "Livre 1.2", "Auteur 1.2", "Éditeur 1.2", "Broché", False)
+        self.library.update_book(updated_book)
+        self.assertEqual(self.book1.title, "Livre 1.2")
+        self.assertEqual(self.book1.author, "Auteur 1.2")
+        self.assertEqual(self.book1.publisher, "Éditeur 1.2")
+        self.assertEqual(self.book1.format, "Broché")
+        self.assertFalse(self.book1.available)
+
+    def test_remove_book(self):
+        self.library.add_book(self.book1)
+        self.library.remove_book(self.book1)
+        self.assertNotIn(self.book1, self.library.books)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
