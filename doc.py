@@ -111,6 +111,18 @@ class LibraryManagement:
     def remove_member(self, member):
         self.members.remove(member)
 
+    def search_members_by_name(self, name):
+        result = []
+        for member in self.members:
+            if name.lower() in (member.first_name.lower() + " " + member.last_name.lower()):
+                result.append(member)
+        return result
+
+    def search_member_by_code(self, code):
+        for member in self.members:
+            if member.code == code:
+                return member
+        return None
 
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
