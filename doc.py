@@ -356,5 +356,14 @@ class LibraryManagementTests(unittest.TestCase):
         ins_membres = res
         self.assertEqual(nb_membres_bdd + nb_membres, ins_membres)
 
+    def test_send_reminder_emails(self):
+        self.library.add_member(self.member)
+        self.library.add_book(self.book1)
+        past_date = datetime.date.today() - datetime.timedelta(days=7)
+        self.reservation1 = Reservation(1, self.member.member_id, past_date, self.book1.isbn)
+        self.reservation2 = Reservation(2, self.member.member_id, past_date, self.book2.isbn)
+        self.library.reservations = [self.reservation1, self.reservation2]
+        self.assertTrue(self.library.send_reminder_emails())
+
 if __name__ == '__main__':
     unittest.main(exit=False)
