@@ -53,6 +53,22 @@ class LibraryManagement:
         self.members = []
         self.reservations = []
 
+    def add_book(self, book):
+        self.books.append(book)
+
+    def update_book(self, book):
+        for i, b in enumerate(self.books):
+            if b.isbn == book.isbn:
+                self.books[i].title = book.title
+                self.books[i].author = book.author
+                self.books[i].publisher = book.publisher
+                self.books[i].format = book.format
+                self.books[i].available = book.available
+                break
+
+    def remove_book(self, book):
+        self.books.remove(book)
+
 
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
