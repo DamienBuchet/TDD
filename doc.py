@@ -148,6 +148,24 @@ class LibraryManagement:
     def remove_reservation(self, reservation):
         self.reservations.remove(reservation)
 
+    def make_reservation(self, member, book):
+        if len(self.get_open_reservations(member)) >= 3:
+            raise Exception("Le nombre maximum de réservations a été atteint pour ce membre")
+        date_limit = datetime.date.today() + datetime.timedelta(days=120)
+        reservation_id = len(self.reservations) + 1
+        reservation = Reservation(reservation_id, member.member_id, date_limit, book.isbn)
+        self.reservations.append(reservation)
+        return reservation
+
+    def cancel_reservation(self, reservation):
+        self.reservations.remove(reservation)
+
+    def get_open_reservations(self, member=None):
+        if member:
+            return [reservation for reservation in self.reservations if reservation.member_id == member.member_id]
+        else:
+            return self.reservations
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
