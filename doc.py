@@ -124,6 +124,18 @@ class LibraryManagement:
                 return member
         return None
 
+    def search_member_by_id(self, member_id):
+        for member in self.members:
+            if member.member_id == member_id:
+                return member
+        return None
+
+    def get_member_email(self, member_id):
+        member = self.search_member_by_id(member_id)
+        if member:
+            return member.email
+        return None
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
