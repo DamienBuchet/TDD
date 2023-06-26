@@ -69,6 +69,32 @@ class LibraryManagement:
     def remove_book(self, book):
         self.books.remove(book)
 
+    def search_books_by_title(self, title):
+        result = []
+        for book in self.books:
+            if book.title.lower() == title.lower():
+                result.append(book)
+        return result
+
+    def search_books_by_author(self, author):
+        result = []
+        for book in self.books:
+            if book.author.lower() == author.lower():
+                result.append(book)
+        return result
+
+    def search_books_by_isbn(self, isbn):
+        for book in self.books:
+            if book.isbn == isbn:
+                return book
+        return None
+
+    def get_book_title(self, isbn):
+        book = self.search_books_by_isbn(isbn)
+        if book:
+            return book.title
+        return None
+
 
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
