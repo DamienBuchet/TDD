@@ -166,6 +166,9 @@ class LibraryManagement:
         else:
             return self.reservations
 
+    def get_reservation_history(self, member):
+        return [reservation for reservation in self.reservations if reservation.member_id == member.member_id]
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
