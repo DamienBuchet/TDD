@@ -215,5 +215,23 @@ class LibraryManagementTests(unittest.TestCase):
         email = self.library.get_member_email(self.member.member_id)
         self.assertEqual(email, "damienbuchet@damienbuchet.fr")
 
+    def test_add_reservation(self):
+        reservation = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book1.isbn)
+        self.library.add_reservation(reservation)
+        self.assertIn(reservation, self.library.reservations)
+
+    def test_update_reservation(self):
+        reservation = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book1.isbn)
+        self.library.add_reservation(reservation)
+        updated_reservation = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today() + datetime.timedelta(days=7), book_isbn=self.book1.isbn)
+        self.library.update_reservation(updated_reservation)
+        self.assertEqual(reservation.return_date, updated_reservation.return_date)
+
+    def test_remove_reservation(self):
+        reservation = Reservation(reservation_id=1, member_id=self.member.member_id, date_limit=datetime.date.today(), book_isbn=self.book1.isbn)
+        self.library.add_reservation(reservation)
+        self.library.remove_reservation(reservation)
+        self.assertNotIn(reservation, self.library.reservations)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
