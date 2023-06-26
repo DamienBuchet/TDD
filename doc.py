@@ -94,6 +94,22 @@ class LibraryManagement:
         if book:
             return book.title
         return None
+    
+    def add_member(self, member):
+        self.members.append(member)
+
+    def update_member(self, member):
+        for i in range(len(self.members)):
+            if self.members[i].member_id == member.member_id:
+                self.members[i].first_name = member.first_name
+                self.members[i].last_name = member.last_name
+                self.members[i].date_of_birth = member.date_of_birth
+                self.members[i].gender = member.gender
+                self.members[i].email = member.email
+                break
+
+    def remove_member(self, member):
+        self.members.remove(member)
 
 
 class LibraryManagementTests(unittest.TestCase):
