@@ -17,10 +17,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_HOST=base64.b64decode(os.environ.get("DB_HOST")).decode()
-DB_USER=base64.b64decode(os.environ.get("DB_USER")).decode()
-DB_PASSWORD=base64.b64decode(os.environ.get("DB_PASSWORD")).decode()
-DB_NAME=base64.b64decode(os.environ.get("DB_NAME")).decode()
+DB_HOST=os.environ.get("DB_HOST")
+DB_USER=os.environ.get("DB_USER")
+DB_PASSWORD=os.environ.get("DB_PASSWORD")
+DB_NAME=os.environ.get("DB_NAME")
 SMTP_HOST=base64.b64decode(os.environ.get("SMTP_HOST")).decode()
 SMTP_USER=base64.b64decode(os.environ.get("SMTP_USER")).decode()
 SMTP_PASSWORD=base64.b64decode(os.environ.get("SMTP_PASSWORD")).decode()
@@ -456,10 +456,13 @@ class LibraryManagementTests(unittest.TestCase):
     def test_send_reminder_emails(self):
         self.library.add_member(self.member)
         self.library.add_book(self.book1)
+        self.library.add_book(self.book2)
+        self.library.add_book(self.book6)
         past_date = datetime.date.today() - datetime.timedelta(days=7)
         self.reservation1 = Reservation(1, self.member.member_id, past_date, self.book1.isbn)
         self.reservation2 = Reservation(2, self.member.member_id, past_date, self.book2.isbn)
-        self.library.reservations = [self.reservation1, self.reservation2]
+        self.reservation3 = Reservation(3, self.member.member_id, past_date, self.book6.isbn)
+        self.library.reservations = [self.reservation1, self.reservation2, self.reservation3]
         self.assertTrue(self.library.send_reminder_emails())
 
     def getLocator(self, isbn):
