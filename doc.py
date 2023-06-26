@@ -1,7 +1,9 @@
 # Modules compris dans l'installation de base de Python
 import base64
 import datetime
+import json
 import os
+import random
 import smtplib
 import unittest
 from email.mime.multipart import MIMEMultipart
@@ -9,6 +11,7 @@ from email.mime.text import MIMEText
 # Modules complémentaires
 # pip install mysql-connector
 import mysql.connector
+import requests
 # pip install python-dotenv
 from dotenv import load_dotenv
 
@@ -265,11 +268,29 @@ class ISBNValidatorTest(unittest.TestCase):
 
     test_invalid_isbn_13 = lambda self: self.assertFalse(ISBNValidator.is_valid_isbn('9782749909393'))
 
+class BookNotFoundException(Exception):
+    pass
+
+
+class InvalidISBNException(Exception):
+    pass
+
 class LibraryManagementTests(unittest.TestCase):
     def setUp(self):
         self.library = LibraryManagement()
-        self.book1 = Book("1234567890", "Livre 1", "Auteur 1", "Éditeur 1", "Poche", True)
-        self.book2 = Book("0987654321", "Livre 2", "Auteur 2", "Éditeur 2", "BD", True)
+        self.book1 = Book("9782749906256", "Le Feu dans le Ciel", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book2 = Book("9782749906621", "Les Dragons de l'Empereur Noir", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book3 = Book("9782749907475", "Piège au Royaume des Ombres", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book4 = Book("9782749907833", "La Princesse rebelle", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book5 = Book("9782749908724", "L'Île des lézards", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book6 = Book("9782749909394", "Le Journal d'Onyx", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book7 = Book("9782749909691", "L'enlèvement", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book8 = Book("9782749910147", "Les Dieux déchus", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book9 = Book("9782749911052", "L'héritage de Danalieth", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book10 = Book("9782749911540", "Représailles", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book11 = Book("9782749911939", "La Justice céleste", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book12 = Book("9782749911946", "Irianeth", "Anne Robillard", "Michel Lafon", "Poche", True)
+        self.book13 = Book("2857045603", "L'apprenti assassin", "Robin Hobb", "Pygmalion Editions", "Poche", True)
         self.member = Member(1, "M001", "John", "Doe", datetime.date(1990, 1, 1), "Homme", "damienbuchet@damienbuchet.fr")
 
     def test_add_book(self):
@@ -278,7 +299,7 @@ class LibraryManagementTests(unittest.TestCase):
 
     def test_update_book(self):
         self.library.add_book(self.book1)
-        updated_book = Book("1234567890", "Livre 1.2", "Auteur 1.2", "Éditeur 1.2", "Broché", False)
+        updated_book = Book("9782749906256", "Livre 1.2", "Auteur 1.2", "Éditeur 1.2", "Broché", False)
         self.library.update_book(updated_book)
         self.assertEqual(self.book1.title, "Livre 1.2")
         self.assertEqual(self.book1.author, "Auteur 1.2")
@@ -294,23 +315,23 @@ class LibraryManagementTests(unittest.TestCase):
     def test_search_books_by_title(self):
         self.library.add_book(self.book1)
         self.library.add_book(self.book2)
-        result = self.library.search_books_by_title("Livre 1")
+        result = self.library.search_books_by_title("Le Feu dans le Ciel")
         self.assertIn(self.book1, result)
         self.assertNotIn(self.book2, result)
 
     def test_search_books_by_author(self):
         self.library.add_book(self.book1)
-        self.library.add_book(self.book2)
-        result = self.library.search_books_by_author("Auteur 1")
+        self.library.add_book(self.book13)
+        result = self.library.search_books_by_author("Anne Robillard")
         self.assertIn(self.book1, result)
         self.assertNotIn(self.book2, result)
 
     def test_search_books_by_isbn(self):
         self.library.add_book(self.book1)
         self.library.add_book(self.book2)
-        result = self.library.search_books_by_isbn("1234567890")
+        result = self.library.search_books_by_isbn("9782749906256")
         self.assertEqual(result, self.book1)
-        result = self.library.search_books_by_isbn("0987654321")
+        result = self.library.search_books_by_isbn("9782749906621")
         self.assertEqual(result, self.book2)
 
     def test_add_member(self):
@@ -405,7 +426,7 @@ class LibraryManagementTests(unittest.TestCase):
         nb_livres = 0
         for book in self.library.books:
             nb_livres += 1
-            sql = f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}','{book.title}','{book.author}','{book.publisher}','{book.format}','{book.available}')"
+            sql = f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}',\"{book.title}\",'{book.author}','{book.publisher}','{book.format}','{book.available}')"
             mycursor.execute(sql)
             mydb.commit()
         sql = f"SELECT COUNT(*) as res FROM books"
@@ -440,6 +461,36 @@ class LibraryManagementTests(unittest.TestCase):
         self.reservation2 = Reservation(2, self.member.member_id, past_date, self.book2.isbn)
         self.library.reservations = [self.reservation1, self.reservation2]
         self.assertTrue(self.library.send_reminder_emails())
+
+    def getLocator(self, isbn):
+        self.library.add_book(self.book1)
+        book = self.library.search_books_by_isbn(isbn)
+        if book is not None:
+            locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
+            return locator
+        else:
+            try:
+                r = requests.get(f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}")
+                x = json.loads(json.dumps(r.json(), indent=4))
+                y = json.loads(json.dumps(x['items'], indent=4))
+                try:
+                    publisher = y[0]['volumeInfo']['publisher']
+                except:
+                    publisher = "Éditeur inconnu"
+                book = Book(isbn, y[0]['volumeInfo']['title'], y[0]['volumeInfo']['authors'][0], publisher, random.choice(["Poche", "Broché", "BD"]), random.choice([True, False]))
+                locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
+                return locator
+            except:
+                test_valid = ISBNValidator.is_valid_isbn(isbn)
+                if test_valid:
+                    raise BookNotFoundException
+                else:
+                    raise InvalidISBNException
+
+    def test_getCorrectLocator(self):
+        self.assertEqual(self.getLocator('9782749941677'), '1677A2')
+        self.assertEqual(self.getLocator('9782749906256'), '6256A5')
+        self.assertNotEqual(self.getLocator('9782749906256'), '1677A2')
 
 if __name__ == '__main__':
     unittest.main(exit=False)
