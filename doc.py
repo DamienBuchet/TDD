@@ -1,5 +1,25 @@
 import datetime
 import unittest
+import mysql.connector
+from dotenv import load_dotenv
+import os
+import base64
+
+load_dotenv()
+
+DB_HOST=base64.b64decode(os.environ.get("DB_HOST")).decode()
+DB_USER=base64.b64decode(os.environ.get("DB_USER")).decode()
+DB_PASSWORD=base64.b64decode(os.environ.get("DB_PASSWORD")).decode()
+DB_NAME=base64.b64decode(os.environ.get("DB_NAME")).decode()
+
+mydb = mysql.connector.connect(
+          host=DB_HOST,
+          user=DB_USER,
+          password=DB_PASSWORD,
+          database=DB_NAME
+        )
+
+mycursor = mydb.cursor()
 
 class Book:
     def __init__(self, isbn, title, author, publisher, format, available):
@@ -298,6 +318,25 @@ class LibraryManagementTests(unittest.TestCase):
         self.assertEqual(len(history), 2)
         self.assertIn(reservation1, history)
         self.assertIn(reservation2, history)
+
+    def test_add_book_in_bdd(self):
+        self.library.add_book(self.book1)
+        self.library.add_book(self.book2)
+        sql = f"SELECT COUNT(*) as res FROM books"
+        mycursor.execute(sql)
+        res = mycursor.fetchall()[0][0]
+        nb_livres_bdd = int(res)
+        nb_livres = 0
+        for book in self.library.books:
+            nb_livres += 1
+            sql = f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}','{book.title}','{book.author}','{book.publisher}','{book.format}','{book.available}')"
+            mycursor.execute(sql)
+            mydb.commit()
+        sql = f"SELECT COUNT(*) as res FROM books"
+        mycursor.execute(sql)
+        res = mycursor.fetchall()[0][0]
+        ins_livres = res
+        self.assertEqual(nb_livres_bdd + nb_livres, ins_livres)
 
 if __name__ == '__main__':
     unittest.main(exit=False)
