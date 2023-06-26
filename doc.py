@@ -144,5 +144,21 @@ class LibraryManagementTests(unittest.TestCase):
         result = self.library.search_books_by_isbn("0987654321")
         self.assertEqual(result, self.book2)
 
+    def test_add_member(self):
+        self.library.add_member(self.member)
+        self.assertIn(self.member, self.library.members)
+
+    def test_update_member(self):
+        self.library.add_member(self.member)
+        updated_member = Member(1, "M001", "John", "Doe", datetime.date(1990, 1, 1), "Femme", "damienbuchetdb@gmail.com")
+        self.library.update_member(updated_member)
+        self.assertEqual(self.member.gender, "Femme")
+        self.assertEqual(self.member.email, "damienbuchetdb@gmail.com")
+
+    def test_remove_member(self):
+        self.library.add_member(self.member)
+        self.library.remove_member(self.member)
+        self.assertNotIn(self.member, self.library.members)
+
 if __name__ == '__main__':
     unittest.main(exit=False)
