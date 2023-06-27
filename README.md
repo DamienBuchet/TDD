@@ -16,7 +16,7 @@ pip install mysql-connector-python
 
 Une fois tout ceci effectué, on peut lancer le fichier Python, depuis un terminal : 
 ```bash
-python doc.py
+python main.py
 ```
 
 Une fois le programme lancé, on a normalement les résultats au bout de quelques secondes : 
