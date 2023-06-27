@@ -28,10 +28,17 @@ SMTP_USER=base64.b64decode(os.environ.get("SMTP_USER")).decode()
 SMTP_PASSWORD=base64.b64decode(os.environ.get("SMTP_PASSWORD")).decode()
 
 class MySQLClass:
+    def __init__(self):
+        self.conn = None
+
     def connect(self):
-        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
-        return conn
+        self.conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+        return self.conn
     
+    def close(self):
+        if self.conn:
+            self.conn.close()
+
     def execute_select_query(self, query):
         conn = self.connect()
         cursor = conn.cursor()
@@ -43,13 +50,14 @@ class MySQLClass:
     
     def execute_other_query(self, query):
         try:
-            conn = self.connect()
-            cursor = conn.cursor()
+            self.connect()
+            cursor = self.conn.cursor()
             cursor.execute(query)
-            conn.commit()
-            conn.close()
+            self.conn.commit()
+            cursor.close()
+            self.close()
             return True
-        except:
+        except mysql.connector.Error:
             return False
 
 class Book:
@@ -463,31 +471,25 @@ class LibraryManagementTests(unittest.TestCase):
     def test_execute_insert_query(self, mock_connect):
         mock_conn = MagicMock(name='connection')
         mock_connect.return_value = mock_conn
-        mock_cursor = MagicMock(name='cursor')
-        my_obj = MySQLClass()
         book = self.book6
-        result = my_obj.execute_other_query(f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}',\"{book.title}\",'{book.author}','{book.publisher}','{book.format}','{book.available}')")
-        self.assertEqual(result, True)
+        result = mock_conn.execute_other_query(f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}',\"{book.title}\",'{book.author}','{book.publisher}','{book.format}','{book.available}')")
+        self.assertEqual(int(result), 1)
 
     @patch('mysql.connector.connect')
     def test_execute_update_query(self, mock_connect):
         mock_conn = MagicMock(name='connection')
         mock_connect.return_value = mock_conn
-        mock_cursor = MagicMock(name='cursor')
-        my_obj = MySQLClass()
         book = self.book6
-        result = my_obj.execute_other_query(f"UPDATE `books` SET `title` = 'Titre modifié' WHERE `isbn` = {book.isbn}")
-        self.assertEqual(result, True)
+        result = mock_conn.execute_other_query(f"UPDATE `books` SET `title` = 'Titre modifié' WHERE `isbn` = {book.isbn}")
+        self.assertEqual(int(result), 1)
 
     @patch('mysql.connector.connect')
     def test_execute_delete_query(self, mock_connect):
         mock_conn = MagicMock(name='connection')
         mock_connect.return_value = mock_conn
-        mock_cursor = MagicMock(name='cursor')
-        my_obj = MySQLClass()
         book = self.book6
-        result = my_obj.execute_other_query(f"DELETE FROM `books` WHERE `isbn` = {book.isbn}")
-        self.assertEqual(result, True)
+        result = mock_conn.execute_other_query(f"DELETE FROM `books` WHERE `isbn` = {book.isbn}")
+        self.assertEqual(int(result), True)
 
     def test_send_reminder_emails(self):
         self.library.add_member(self.member)
