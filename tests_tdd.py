@@ -1,14 +1,8 @@
 import datetime
-import json
-import random
 import unittest
 from unittest.mock import MagicMock, patch
 
-import requests
-
 from book import Book
-from booknotfound import BookNotFoundException
-from invalidisbn import InvalidISBNException
 from isbnvalidator import ISBNValidator
 from librarymanagement import LibraryManagement
 from member import Member
@@ -215,35 +209,10 @@ class Test(unittest.TestCase):
             smtp_server.sendmail.assert_called_once_with("tests_tdd@tdd.test", member_email, "Subject: {}\r\n\r\n{}".format(subject, message))
             smtp_server.quit.assert_called_once()
 
-    def getLocator(self, isbn):
-        self.library.add_book(self.book1)
-        book = self.library.search_books_by_isbn(isbn)
-        if book is not None:
-            locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
-            return locator
-        else:
-            try:
-                r = requests.get(f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}")
-                x = json.loads(json.dumps(r.json(), indent=4))
-                y = json.loads(json.dumps(x['items'], indent=4))
-                try:
-                    publisher = y[0]['volumeInfo']['publisher']
-                except:
-                    publisher = "Éditeur inconnu"
-                book = Book(isbn, y[0]['volumeInfo']['title'], y[0]['volumeInfo']['authors'][0], publisher, random.choice(["Poche", "Broché", "BD"]), random.choice([True, False]))
-                locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
-                return locator
-            except:
-                test_valid = ISBNValidator.is_valid_isbn(isbn)
-                if test_valid:
-                    raise BookNotFoundException
-                else:
-                    raise InvalidISBNException
-
     def test_getCorrectLocator(self):
-        self.assertEqual(self.getLocator('9782749941677'), '1677A2')
-        self.assertEqual(self.getLocator('9782749906256'), '6256A5')
-        self.assertNotEqual(self.getLocator('9782749906256'), '1677A2')
+        self.assertEqual(LibraryManagement.getLocator(self, '9782749941677'), '1677A2')
+        self.assertEqual(LibraryManagement.getLocator(self, '9782749906256'), '6256A5')
+        self.assertNotEqual(LibraryManagement.getLocator(self, '9782749906256'), '1677A2')
 
     test_valid_isbn_10 = lambda self: self.assertTrue(ISBNValidator.is_valid_isbn('2749909392'))
 

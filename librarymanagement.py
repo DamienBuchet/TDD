@@ -1,4 +1,11 @@
 import datetime
+import requests
+import json
+import random
+from book import Book
+from isbnvalidator import ISBNValidator
+from booknotfound import BookNotFoundException
+from invalidisbn import InvalidISBNException
 from reservation import Reservation
 from mysqlclass import MySQLClass
 
@@ -148,3 +155,28 @@ class LibraryManagement:
 
     def get_reservation_history(self, member):
         return [reservation for reservation in self.reservations if reservation.member_id == member.member_id]
+    
+    def getLocator(self, isbn):
+        self.library.add_book(self.book1)
+        book = self.library.search_books_by_isbn(isbn)
+        if book is not None:
+            locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
+            return locator
+        else:
+            try:
+                r = requests.get(f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}")
+                x = json.loads(json.dumps(r.json(), indent=4))
+                y = json.loads(json.dumps(x['items'], indent=4))
+                try:
+                    publisher = y[0]['volumeInfo']['publisher']
+                except:
+                    publisher = "Éditeur inconnu"
+                book = Book(isbn, y[0]['volumeInfo']['title'], y[0]['volumeInfo']['authors'][0], publisher, random.choice(["Poche", "Broché", "BD"]), random.choice([True, False]))
+                locator = str(str(book.isbn)[-4:]) + str((book.author)[0]) + str(len((book.title).split()))
+                return locator
+            except:
+                test_valid = ISBNValidator.is_valid_isbn(isbn)
+                if test_valid:
+                    raise BookNotFoundException
+                else:
+                    raise InvalidISBNException
