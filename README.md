@@ -9,18 +9,17 @@ Puis, on installe les modules nécessaires à l'aide du fichier requirements.txt
 ```bash
 python -m pip install -r requirements.txt
 ```
-Ensuite, il faudra lancer un serveur local pour avoir une base de données (ici, on utilise phpMyAdmin, avec MySQL, avec pour hôte : localhost, utilisateur : root, pas de mot de passe, et un nom de base de données : tdd). Il est possible de créer la base de données en utilisant le fichier bdd.sql, qui contient les instructions nécessaires à cette tâche, en important ce fichier dans phpMyAdmin (exemple ci-dessous).
-#
- 
-![Image](https://i.goopics.net/ygo7c5.png)
 
 #
 
-Une fois tout ceci effectué, on peut lancer le fichier Python, depuis le cmd : 
+⚠️ Avant de lancer le programme, vérifier que le fichier .env est bien dans le même répertoire ⚠️
+
+#
+
+Une fois tout ceci effectué, on peut lancer le fichier Python, depuis un terminal : 
 ```bash
 python doc.py
 ```
-ou à partir de n'importe quel éditeur pouvant faire fonctionner des programmes en Python.
 
 Une fois le programme lancé, on a normalement les résultats au bout de quelques secondes : 
 
