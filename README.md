@@ -23,6 +23,6 @@ python doc.py
 
 Une fois le programme lancé, on a normalement les résultats au bout de quelques secondes : 
 
-![Image](https://i.goopics.net/17jic3.png)
+![Image](https://i.goopics.net/6xnzbs.png)
 
 Si des erreurs ont lieu, il sera affiché sous les résultats : (errors: x, failures: x), ainsi que les problèmes rencontrés.
