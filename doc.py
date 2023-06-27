@@ -6,10 +6,12 @@ import os
 import random
 import smtplib
 import unittest
+import unittest.mock
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from unittest.mock import MagicMock, patch
 # Modules complémentaires
-# pip install mysql-connector
+# pip install mysql-connector-python
 import mysql.connector
 import requests
 # pip install python-dotenv
@@ -25,14 +27,30 @@ SMTP_HOST=base64.b64decode(os.environ.get("SMTP_HOST")).decode()
 SMTP_USER=base64.b64decode(os.environ.get("SMTP_USER")).decode()
 SMTP_PASSWORD=base64.b64decode(os.environ.get("SMTP_PASSWORD")).decode()
 
-mydb = mysql.connector.connect(
-          host=DB_HOST,
-          user=DB_USER,
-          password=DB_PASSWORD,
-          database=DB_NAME
-        )
-
-mycursor = mydb.cursor()
+class MySQLClass:
+    def connect(self):
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+        return conn
+    
+    def execute_select_query(self, query):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    
+    def execute_other_query(self, query):
+        try:
+            conn = self.connect()
+            cursor = conn.cursor()
+            cursor.execute(query)
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
 
 class Book:
     def __init__(self, isbn, title, author, publisher, format, available):
@@ -271,11 +289,11 @@ class ISBNValidatorTest(unittest.TestCase):
 class BookNotFoundException(Exception):
     pass
 
-
 class InvalidISBNException(Exception):
     pass
 
 class LibraryManagementTests(unittest.TestCase):
+
     def setUp(self):
         self.library = LibraryManagement()
         self.book1 = Book("9782749906256", "Le Feu dans le Ciel", "Anne Robillard", "Michel Lafon", "Poche", True)
@@ -416,42 +434,60 @@ class LibraryManagementTests(unittest.TestCase):
         self.assertIn(reservation1, history)
         self.assertIn(reservation2, history)
 
-    def test_add_book_in_bdd(self):
-        self.library.add_book(self.book1)
-        self.library.add_book(self.book2)
-        sql = f"SELECT COUNT(*) as res FROM books"
-        mycursor.execute(sql)
-        res = mycursor.fetchall()[0][0]
-        nb_livres_bdd = int(res)
-        nb_livres = 0
-        for book in self.library.books:
-            nb_livres += 1
-            sql = f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}',\"{book.title}\",'{book.author}','{book.publisher}','{book.format}','{book.available}')"
-            mycursor.execute(sql)
-            mydb.commit()
-        sql = f"SELECT COUNT(*) as res FROM books"
-        mycursor.execute(sql)
-        res = mycursor.fetchall()[0][0]
-        ins_livres = res
-        self.assertEqual(nb_livres_bdd + nb_livres, ins_livres)
+    @patch('mysql.connector.connect')
+    def test_connect(self, mock_connect):
+        mock_conn = MagicMock(name='connection')
+        mock_connect.return_value = mock_conn
+        my_obj = MySQLClass()
+        conn = my_obj.connect()
+        mock_connect.assert_called_once_with(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+        self.assertEqual(conn, mock_conn)
 
-    def test_add_member_in_bdd(self):
-        self.library.add_member(self.member)
-        sql = f"SELECT COUNT(*) as res FROM members"
-        mycursor.execute(sql)
-        res = mycursor.fetchall()[0][0]
-        nb_membres_bdd = int(res)
-        nb_membres = 0
-        for member in self.library.members:
-            nb_membres += 1
-            sql = f"INSERT INTO `members`(`member_id`, `code`, `firstname`, `lastname`, `birthdate`, `gender`, `email`) VALUES ('{member.member_id}','{member.code}','{member.first_name}','{member.last_name}','{member.date_of_birth}','{member.gender}','{member.email}')"
-            mycursor.execute(sql)
-            mydb.commit()
-        sql = f"SELECT COUNT(*) as res FROM members"
-        mycursor.execute(sql)
-        res = mycursor.fetchall()[0][0]
-        ins_membres = res
-        self.assertEqual(nb_membres_bdd + nb_membres, ins_membres)
+    @patch('mysql.connector.connect')
+    def test_execute_select_query(self, mock_connect):
+        mock_conn = MagicMock(name='connection')
+        mock_connect.return_value = mock_conn
+        mock_cursor = MagicMock(name='cursor')
+        mock_cursor.fetchall.return_value = [self.book1, self.book2]
+        mock_conn.cursor.return_value = mock_cursor
+        my_obj = MySQLClass()
+        result = my_obj.execute_select_query('SELECT * FROM books')
+        mock_connect.assert_called_once()
+        mock_cursor.execute.assert_called_once_with('SELECT * FROM books')
+        mock_cursor.fetchall.assert_called_once()
+        self.assertEqual(result, [self.book1, self.book2])
+        mock_cursor.close.assert_called_once()
+        mock_conn.close.assert_called_once()
+
+    @patch('mysql.connector.connect')
+    def test_execute_insert_query(self, mock_connect):
+        mock_conn = MagicMock(name='connection')
+        mock_connect.return_value = mock_conn
+        mock_cursor = MagicMock(name='cursor')
+        my_obj = MySQLClass()
+        book = self.book6
+        result = my_obj.execute_other_query(f"INSERT INTO `books`(`isbn`, `title`, `author`, `publisher`, `format`, `available`) VALUES ('{book.isbn}',\"{book.title}\",'{book.author}','{book.publisher}','{book.format}','{book.available}')")
+        self.assertEqual(result, True)
+
+    @patch('mysql.connector.connect')
+    def test_execute_update_query(self, mock_connect):
+        mock_conn = MagicMock(name='connection')
+        mock_connect.return_value = mock_conn
+        mock_cursor = MagicMock(name='cursor')
+        my_obj = MySQLClass()
+        book = self.book6
+        result = my_obj.execute_other_query(f"UPDATE `books` SET `title` = 'Titre modifié' WHERE `isbn` = {book.isbn}")
+        self.assertEqual(result, True)
+
+    @patch('mysql.connector.connect')
+    def test_execute_delete_query(self, mock_connect):
+        mock_conn = MagicMock(name='connection')
+        mock_connect.return_value = mock_conn
+        mock_cursor = MagicMock(name='cursor')
+        my_obj = MySQLClass()
+        book = self.book6
+        result = my_obj.execute_other_query(f"DELETE FROM `books` WHERE `isbn` = {book.isbn}")
+        self.assertEqual(result, True)
 
     def test_send_reminder_emails(self):
         self.library.add_member(self.member)
