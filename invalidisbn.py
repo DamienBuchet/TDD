@@ -1,0 +1,2 @@
+class InvalidISBNException(Exception):
+    pass
