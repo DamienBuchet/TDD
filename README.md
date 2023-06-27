@@ -24,3 +24,10 @@ Une fois le programme lancé, on a normalement les résultats au bout de quelque
 ![Image](https://i.goopics.net/wosm7m.png)
 
 Si des erreurs ont lieu, il sera affiché sous les résultats : (errors: x, failures: x), ainsi que les problèmes rencontrés.
+
+On peut également ajouter un argument après la commande, pour une meilleure verbosité : 
+```bash
+python main.py 2
+```
+Ce qui donnera un résultat comme suit : 
+![Image](https://i.goopics.net/c9te6b.png)
